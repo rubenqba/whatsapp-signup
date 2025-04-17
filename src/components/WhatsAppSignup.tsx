@@ -39,18 +39,11 @@ export default function WhatsAppSignup() {
   return (
     <>
       <div
-        className="fb-whatsapp-signup"
+        className="fb-whatsapp-embedded-signup"
         data-app-id={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
         data-config-id={process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID}
         data-size="large"
         data-button-text="Registrarse"
-        data-redirect-uri={
-          process.env.NEXT_PUBLIC_WHATSAPP_REDIRECT_URI
-            ? encodeURIComponent(
-                process.env.NEXT_PUBLIC_WHATSAPP_REDIRECT_URI
-              )
-            : ''
-        }
       />
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
