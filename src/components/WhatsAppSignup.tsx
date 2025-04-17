@@ -1,12 +1,57 @@
 "use client";
+import { useEffect } from 'react';
 import Script from 'next/script';
 
 export default function WhatsAppSignup() {
-  const containerId = 'whatsapp-embedded-signup';
+  // Escucha los mensajes del iframe de WhatsApp Embedded Signup
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      if (
+        event.origin !== 'https://www.facebook.com' &&
+        event.origin !== 'https://web.facebook.com'
+      ) {
+        return;
+      }
+      let data: any;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        console.error('WA_EMBEDDED_SIGNUP message event', event.data);
+        return;
+      }
+      if (data.type === 'WA_EMBEDDED_SIGNUP') {
+        fetch('/api/whatsapp-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((result) => console.log('Embedded signup event sent', result))
+          .catch((error) =>
+            console.error('Error sending embedded signup event', error)
+          );
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
-    <div>
-      <div id={containerId} />
+    <>
+      <div
+        className="fb-whatsapp-signup"
+        data-app-id={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
+        data-config-id={process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID}
+        data-size="large"
+        data-button-text="Registrarse"
+        data-redirect-uri={
+          process.env.NEXT_PUBLIC_WHATSAPP_REDIRECT_URI
+            ? encodeURIComponent(
+                process.env.NEXT_PUBLIC_WHATSAPP_REDIRECT_URI
+              )
+            : ''
+        }
+      />
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
         strategy="afterInteractive"
@@ -18,40 +63,15 @@ export default function WhatsAppSignup() {
           }
           FB.init({
             appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+            autoLogAppEvents: true,
+            xfbml: true,
             version: process.env.NEXT_PUBLIC_FACEBOOK_API_VERSION || 'v16.0',
           });
-
-          const plugin = (FB as any).WhatsAppEmbeddedSignup;
-          if (!plugin) {
-            console.error('WhatsApp Embedded Signup plugin not available');
-            return;
+          if (typeof FB.XFBML?.parse === 'function') {
+            FB.XFBML.parse();
           }
-
-          plugin.attachTo(`#${containerId}`, {
-            appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-            configId: process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID,
-            origin: window.location.origin,
-            onReady: () => {
-              console.log('WhatsApp embedded signup is ready');
-            },
-            onLoginSuccess: (response: any) => {
-              fetch('/api/whatsapp-registration', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(response),
-              })
-                .then((res) => res.json())
-                .then((data) => console.log('Embedded signup event sent', data))
-                .catch((err) =>
-                  console.error('Error sending embedded signup event', err)
-                );
-            },
-            onError: (error: any) => {
-              console.error('Embedded signup encountered an error', error);
-            },
-          });
         }}
       />
-    </div>
+    </>
   );
 }
