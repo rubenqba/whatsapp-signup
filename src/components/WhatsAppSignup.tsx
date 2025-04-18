@@ -1,8 +1,46 @@
 "use client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
 export default function WhatsAppSignup() {
+  const [isSignupVisible, setIsSignupVisible] = useState(false);
+
+  const handleStartSignup = () => {
+    setIsSignupVisible(true);
+  };
+
+  const launchWhatsAppSignup = () => {
+    const FB = (window as any).FB;
+    if (!FB) {
+      console.error('Facebook SDK not initialized');
+      return;
+    }
+
+    FB.login(
+      (response: any) => {
+        if (response.authResponse) {
+          const code = response.authResponse.code;
+          console.log('Signup successful, code:', code);
+          fetch('/api/whatsapp-registration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          })
+            .then((res) => res.json())
+            .then((result) => console.log('Registration event sent', result))
+            .catch((error) => console.error('Error sending registration event', error));
+        } else {
+          console.log('Signup cancelled or failed', response);
+        }
+      },
+      {
+        config_id: process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID,
+        response_type: 'code',
+        override_default_response_type: true,
+      }
+    );
+  };
+
   // Escucha los mensajes del iframe de WhatsApp Embedded Signup
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -38,13 +76,23 @@ export default function WhatsAppSignup() {
 
   return (
     <>
-      <div
-        className="fb-whatsapp-embedded-signup"
-        data-app-id={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
-        data-config-id={process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID}
-        data-size="large"
-        data-button-text="Registrarse"
-      />
+      <button
+        onClick={launchWhatsAppSignup}
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Iniciar Registro de WhatsApp Business
+      </button>
+
+      {isSignupVisible && (
+        <div
+          className="fb-whatsapp-embedded-signup mt-4"
+          data-app-id={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
+          data-config-id={process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID}
+          data-size="large"
+          data-button-text="Registrarse"
+        />
+      )}
+
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
         strategy="afterInteractive"
