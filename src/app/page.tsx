@@ -1,10 +1,8 @@
-"use client";
-import WhatsAppSignup from '../components/WhatsAppSignup';
+import { redirect } from 'next/navigation';
 
-export default function Home() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <WhatsAppSignup />
-    </div>
-  );
+/**
+ * Root page: redirect to /dashboard
+ */
+export default function Page() {
+  redirect('/dashboard');
 }

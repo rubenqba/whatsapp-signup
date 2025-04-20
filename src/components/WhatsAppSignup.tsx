@@ -1,34 +1,65 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import { useMsal } from '@azure/msal-react';
+import { InteractionRequiredAuthError } from '@azure/msal-browser';
+import { loginRequest } from '@/auth/msalConfig';
 
 export default function WhatsAppSignup() {
   const [isSignupVisible, setIsSignupVisible] = useState(false);
+  const { instance, accounts } = useMsal();
 
   const handleStartSignup = () => {
     setIsSignupVisible(true);
   };
 
-  const launchWhatsAppSignup = () => {
+  const launchWhatsAppSignup = async () => {
+    // Ensure user is signed in
+    if (!accounts || accounts.length === 0) {
+      try {
+        await instance.loginPopup(loginRequest);
+      } catch (error) {
+        console.error('Login required for registration:', error);
+        return;
+      }
+    }
+    // Acquire token silently for API
+    let tokenResponse;
+    const tokenRequest = { ...loginRequest, account: accounts[0] };
+    try {
+      tokenResponse = await instance.acquireTokenSilent(tokenRequest);
+    } catch (error: any) {
+      if (error instanceof InteractionRequiredAuthError) {
+        tokenResponse = await instance.acquireTokenPopup(tokenRequest);
+      } else {
+        console.error('Token acquisition error:', error);
+        return;
+      }
+    }
     const FB = (window as any).FB;
     if (!FB) {
       console.error('Facebook SDK not initialized');
       return;
     }
-
     FB.login(
-      (response: any) => {
+      async (response: any) => {
         if (response.authResponse) {
           const code = response.authResponse.code;
           console.log('Signup successful, code:', code);
-          fetch('/api/whatsapp-registration', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
-          })
-            .then((res) => res.json())
-            .then((result) => console.log('Registration event sent', result))
-            .catch((error) => console.error('Error sending registration event', error));
+          try {
+            const res = await fetch('/api/whatsapp-registration', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${tokenResponse.accessToken}`,
+              },
+              body: JSON.stringify({ code }),
+            });
+            const result = await res.json();
+            console.log('Registration event sent', result);
+          } catch (error) {
+            console.error('Error sending registration event', error);
+          }
         } else {
           console.log('Signup cancelled or failed', response);
         }
@@ -44,30 +75,31 @@ export default function WhatsAppSignup() {
   // Escucha los mensajes del iframe de WhatsApp Embedded Signup
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
-      if (
-        event.origin !== 'https://www.facebook.com' &&
-        event.origin !== 'https://web.facebook.com'
-      ) {
-        return;
-      }
-      let data: any;
+      if (!event.origin.endsWith('facebook.com')) return;
       try {
-        data = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          
+          // if user finishes the Embedded Signup flow
+          if (data.event === 'FINISH' || data.event === 'FINISH_ONLY_WABA') {
+            const {phone_number_id, waba_id} = data.data;
+            console.log('Phone number ID ', phone_number_id, ' WhatsApp business account ID ', waba_id);
+
+            // send the phone number ID and WABA ID to backend `/api/whatsapp-registration`
+      
+          // if user cancels the Embedded Signup flow
+          } else if (data.event === 'CANCEL') {
+            const {current_step} = data.data;
+            console.warn('Cancel at ', current_step);
+
+          // if user reports an error during the Embedded Signup flow
+          } else if (data.event === 'ERROR') {
+            const {error_message} = data.data;
+            console.error('error ', error_message);
+          }
+        }
       } catch {
-        console.error('WA_EMBEDDED_SIGNUP message event', event.data);
-        return;
-      }
-      if (data.type === 'WA_EMBEDDED_SIGNUP') {
-        fetch('/api/whatsapp-registration', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((result) => console.log('Embedded signup event sent', result))
-          .catch((error) =>
-            console.error('Error sending embedded signup event', error)
-          );
+        console.log('Non JSON Responses', event.data);
       }
     }
     window.addEventListener('message', handleMessage);
@@ -106,7 +138,7 @@ export default function WhatsAppSignup() {
             appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
             autoLogAppEvents: true,
             xfbml: true,
-            version: process.env.NEXT_PUBLIC_FACEBOOK_API_VERSION || 'v16.0',
+            version: process.env.NEXT_PUBLIC_FACEBOOK_API_VERSION || 'v22.0',
           });
           if (typeof FB.XFBML?.parse === 'function') {
             FB.XFBML.parse();
