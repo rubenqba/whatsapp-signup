@@ -43,7 +43,7 @@ This file provides context and guidelines to GitHub Copilot to assist in generat
 | NEXT_PUBLIC_AZURE_B2C_TENANT_NAME           | Azure AD B2C tenant name (e.g., yourtenant.b2clogin.com)                   |
 | NEXT_PUBLIC_AZURE_B2C_POLICY_SIGNUP_SIGNIN  | Azure AD B2C sign-up/sign-in policy name                                    |
 | NEXT_PUBLIC_REDIRECT_URI                    | Redirect URI after login/logout (defaults to window.location.origin)        |
-| NEXT_PUBLIC_AZURE_B2C_API_SCOPE             | API scope for Azure AD B2C (e.g., https://<tenant>.onmicrosoft.com/api/user_impersonation) |
+| NEXT_PUBLIC_AZURE_B2C_API_SCOPE             | API scope for Azure AD B2C (e.g., `https://<tenant>.onmicrosoft.com/api/user_impersonation`) |
 | NEXT_PUBLIC_FACEBOOK_APP_ID                 | Facebook App ID                                                             |
 | NEXT_PUBLIC_FACEBOOK_API_VERSION            | Facebook SDK version (default: v22.0)                                       |
 | NEXT_PUBLIC_FB_LOGIN_CONFIG_ID              | Facebook Embedded Signup configuration ID                                   |
