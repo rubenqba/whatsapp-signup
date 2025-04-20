@@ -37,7 +37,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   
 ## Environment Variables
 
-- `REGISTRATION_API_URL`: URL of the external API endpoint to receive WhatsApp registration data. Set this in `.env.local`.
+- `REGISTRATION_API_URL`: URL of the external API endpoint to receive WhatsApp registration data. Set this in `.env.local` (optional, if using external endpoint).
 - `NEXT_PUBLIC_FACEBOOK_APP_ID`: Facebook App ID for initializing the JS SDK. Set this in `.env.local`.
 - `NEXT_PUBLIC_FACEBOOK_API_VERSION`: Graph API version for the JS SDK (e.g., `v22.0`). Set this in `.env.local`.
 - `NEXT_PUBLIC_FB_LOGIN_CONFIG_ID`: Configuration ID for Facebook Login for Business (Embedded Signup variation). Set this in `.env.local`.
+  
+### Azure AD B2C Authentication
+- `NEXT_PUBLIC_AZURE_B2C_TENANT_NAME`: Your Azure AD B2C tenant name (e.g., `contoso`).
+- `NEXT_PUBLIC_AZURE_B2C_CLIENT_ID`: Client/Application (frontend) ID for your Azure AD B2C user-flow application. Set in `.env.local`.
+- `NEXT_PUBLIC_AZURE_B2C_POLICY_SIGNUP_SIGNIN`: The user-flow policy name for sign up/sign in (e.g., `B2C_1_signupsignin`). Set in `.env.local`.
+- `NEXT_PUBLIC_REDIRECT_URI`: Redirect URI for MSAL (defaults to app origin if not set). Optional, set in `.env.local`.
+- `NEXT_PUBLIC_AZURE_B2C_API_SCOPE`: The scope URI for your backend API (e.g., `https://<tenant>.onmicrosoft.com/<api-client-id>/user_impersonation`). Set in `.env.local`.
+- `AZURE_B2C_API_CLIENT_ID`: Application (backend) ID for validating the token audience in the API. Set in `.env.local` (server-side only, no `NEXT_PUBLIC_` prefix).
