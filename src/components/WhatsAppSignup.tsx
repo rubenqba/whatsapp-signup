@@ -1,11 +1,16 @@
-"use client";
+'use client';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { useMsal } from '@azure/msal-react';
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import { loginRequest } from '@/auth/msalConfig';
+import { TwilioPhoneNumber } from '@/lib/models';
 
-export default function WhatsAppSignup() {
+interface WhatsAppSignupProps {
+  row: TwilioPhoneNumber;
+}
+
+export default function WhatsAppSignup({ row }: WhatsAppSignupProps) {
   const [isSignupVisible, setIsSignupVisible] = useState(false);
   const { instance, accounts } = useMsal();
 
@@ -14,6 +19,8 @@ export default function WhatsAppSignup() {
   };
 
   const launchWhatsAppSignup = async () => {
+    // Show the signup UI
+    handleStartSignup();
     // Ensure user is signed in
     if (!accounts || accounts.length === 0) {
       try {
@@ -42,32 +49,21 @@ export default function WhatsAppSignup() {
       return;
     }
     FB.login(
-      async (response: any) => {
-        if (response.authResponse) {
-          const code = response.authResponse.code;
-          console.log('Signup successful, code:', code);
-          try {
-            const res = await fetch('/api/whatsapp-registration', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${tokenResponse.accessToken}`,
-              },
-              body: JSON.stringify({ code }),
-            });
-            const result = await res.json();
-            console.log('Registration event sent', result);
-          } catch (error) {
-            console.error('Error sending registration event', error);
-          }
-        } else {
-          console.log('Signup cancelled or failed', response);
-        }
+      function () {
+        // Since you are using Twilio's APIs, you do not need to do anything with the response here.
       },
       {
         config_id: process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID,
+        auth_type: 'rerequest',
         response_type: 'code',
         override_default_response_type: true,
+        extras: {
+          setup: {
+            solutionID: process.env.NEXT_PUBLIC_FB_SOLUTION_ID,
+          },
+          featureType: 'only_waba_sharing',
+          sessionInfoVersion: '3',
+        },
       }
     );
   };
@@ -79,22 +75,19 @@ export default function WhatsAppSignup() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
-          
           // if user finishes the Embedded Signup flow
           if (data.event === 'FINISH' || data.event === 'FINISH_ONLY_WABA') {
-            const {phone_number_id, waba_id} = data.data;
+            const { phone_number_id, waba_id } = data.data;
             console.log('Phone number ID ', phone_number_id, ' WhatsApp business account ID ', waba_id);
 
-            // send the phone number ID and WABA ID to backend `/api/whatsapp-registration`
-      
-          // if user cancels the Embedded Signup flow
+            // if user cancels the Embedded Signup flow
           } else if (data.event === 'CANCEL') {
-            const {current_step} = data.data;
+            const { current_step } = data.data;
             console.warn('Cancel at ', current_step);
 
-          // if user reports an error during the Embedded Signup flow
+            // if user reports an error during the Embedded Signup flow
           } else if (data.event === 'ERROR') {
-            const {error_message} = data.data;
+            const { error_message } = data.data;
             console.error('error ', error_message);
           }
         }
@@ -108,10 +101,7 @@ export default function WhatsAppSignup() {
 
   return (
     <>
-      <button
-        onClick={launchWhatsAppSignup}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
+      <button onClick={launchWhatsAppSignup} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         Iniciar Registro de WhatsApp Business
       </button>
 
@@ -120,14 +110,16 @@ export default function WhatsAppSignup() {
           className="fb-whatsapp-embedded-signup mt-4"
           data-app-id={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID}
           data-config-id={process.env.NEXT_PUBLIC_FB_LOGIN_CONFIG_ID}
+          data-phone-number={row.number}
           data-size="large"
           data-button-text="Registrarse"
         />
       )}
-
       <Script
         src="https://connect.facebook.net/en_US/sdk.js"
-        strategy="afterInteractive"
+        async
+        crossOrigin="anonymous"
+        defer
         onLoad={() => {
           const FB = (window as any).FB;
           if (!FB) {

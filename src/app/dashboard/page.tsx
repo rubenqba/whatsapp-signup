@@ -6,9 +6,9 @@ import { InteractionStatus } from '@azure/msal-browser';
 import { loginRequest } from '@/auth/msalConfig';
 import { SignInButton } from '@/components/Authentication';
 import { TwilioPhoneNumber } from '@/lib/models';
+import WhatsAppSignup from '@/components/WhatsAppSignup';
 // MUI Joy components
 import Table from '@mui/joy/Table';
-import Button from '@mui/joy/Button';
 
 /**
  * Dashboard page: shows a list of numbers associated to the authenticated user.
@@ -21,11 +21,8 @@ export default function DashboardPage() {
   const [numbers, setNumbers] = useState<TwilioPhoneNumber[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Action handler for row buttons
-  const handleAction = (num: TwilioPhoneNumber) => {
-    // TODO: Implement action for phone number
-    console.log('Action for number:', num);
-  };
+  // Action handler is handled by WhatsAppSignup component per row
+  // (previous handleAction is no longer required)
 
   useEffect(() => {
     if (inProgress === InteractionStatus.Startup) {
@@ -112,9 +109,7 @@ export default function DashboardPage() {
                   <td>{new Date(num.created).toLocaleString()}</td>
                   <td>{new Date(num.updated).toLocaleString()}</td>
                   <td>
-                    <Button size="sm" variant="solid" color="primary" onClick={() => handleAction(num)}>
-                      Action
-                    </Button>
+                    <WhatsAppSignup row={num} />
                   </td>
                 </tr>
               ))
