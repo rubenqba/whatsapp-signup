@@ -61,7 +61,7 @@ export default function WhatsAppSignup({ row }: WhatsAppSignupProps) {
           setup: {
             solutionID: process.env.NEXT_PUBLIC_FB_SOLUTION_ID,
           },
-          featureType: 'only_waba_sharing',
+          featureType: row.capabilities.sms ? 'only_waba_sharing' : null,
           sessionInfoVersion: '3',
         },
       }
@@ -79,7 +79,7 @@ export default function WhatsAppSignup({ row }: WhatsAppSignupProps) {
           if (data.event === 'FINISH' || data.event === 'FINISH_ONLY_WABA') {
             const { phone_number_id, waba_id } = data.data;
             console.log('Phone number ID ', phone_number_id, ' WhatsApp business account ID ', waba_id);
-
+            alert(`Phone number ID: ${phone_number_id}\nWABA ID: ${waba_id}`);
             // if user cancels the Embedded Signup flow
           } else if (data.event === 'CANCEL') {
             const { current_step } = data.data;
@@ -102,7 +102,7 @@ export default function WhatsAppSignup({ row }: WhatsAppSignupProps) {
   return (
     <>
       <button onClick={launchWhatsAppSignup} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-        Iniciar Registro de WhatsApp Business
+        Registro
       </button>
 
       {isSignupVisible && (

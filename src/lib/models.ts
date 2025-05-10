@@ -41,6 +41,12 @@ export type TwilioPhoneRequirements = z.infer<typeof TwilioPhoneRequirementsSche
 export const TwilioPhoneOriginSchema = z.enum(['twilio', 'hosted']).describe('Phone Number Origin');
 export type TwilioPhoneOrigin = z.infer<typeof TwilioPhoneOriginSchema>;
 
+export const TwilioPhoneNumberCapabilitiesSchema = z.object({
+  voice: z.boolean().describe('Voice Capabilities'),
+  sms: z.boolean().describe('SMS Capabilities'),
+}).describe('Capabilities');
+export type TwilioPhoneNumberCapabilities = z.infer<typeof TwilioPhoneNumberCapabilitiesSchema>;
+
 export const TwilioPhoneNumberSchema = z.object({
   id: TwilioPhoneIDSchema,
   account: z.string().describe('User Account ID'),
@@ -48,6 +54,7 @@ export const TwilioPhoneNumberSchema = z.object({
   origin: TwilioPhoneOriginSchema.describe('Phone Number Origin'),
   requirements: TwilioPhoneRequirementsSchema.describe('Phone Number Requirements'),
   status: z.string().describe('Twilio Number Status'),
+  capabilities: TwilioPhoneNumberCapabilitiesSchema.describe('Phone Number Capabilities'),
   created: z.coerce.date().default(() => new Date()),
   updated: z.coerce.date().default(() => new Date()),
 });

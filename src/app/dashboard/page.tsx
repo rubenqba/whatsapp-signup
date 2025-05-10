@@ -92,6 +92,7 @@ export default function DashboardPage() {
               <th>Origin</th>
               <th>Requirements</th>
               <th>Status</th>
+              <th>Capabilities</th>
               <th>Created</th>
               <th>Updated</th>
               <th>Actions</th>
@@ -106,6 +107,7 @@ export default function DashboardPage() {
                   <td>{num.origin}</td>
                   <td>{num.requirements.type}</td>
                   <td>{num.status}</td>
+                  <td><div><span>{num.capabilities.voice ? '✔️' : '❌'}</span><span>{num.capabilities.sms ? '✔️' : '❌'}</span></div></td>
                   <td>{new Date(num.created).toLocaleString()}</td>
                   <td>{new Date(num.updated).toLocaleString()}</td>
                   <td>

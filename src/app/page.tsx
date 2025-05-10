@@ -9,6 +9,8 @@ import { TwilioPhoneNumber } from '@/lib/models';
 import WhatsAppSignup from '@/components/WhatsAppSignup';
 // MUI Joy components
 import Table from '@mui/joy/Table';
+import WhatsAppSignupPrefilled from '@/components/WhatsAppSignupPrefilled';
+import { DateTime } from '@/components/DateTime';
 
 /**
  * Dashboard page: shows a list of numbers associated to the authenticated user.
@@ -92,6 +94,7 @@ export default function DashboardPage() {
               <th>Origin</th>
               <th>Requirements</th>
               <th>Status</th>
+              <th>Capabilities</th>
               <th>Created</th>
               <th>Updated</th>
               <th>Actions</th>
@@ -106,10 +109,14 @@ export default function DashboardPage() {
                   <td>{num.origin}</td>
                   <td>{num.requirements.type}</td>
                   <td>{num.status}</td>
-                  <td>{new Date(num.created).toLocaleString()}</td>
-                  <td>{new Date(num.updated).toLocaleString()}</td>
+                  <td><div className='flex flex-col'><span>Voice: {num.capabilities.voice ? '✔️' : '❌'}</span><span>SMS: {num.capabilities.sms ? '✔️' : '❌'}</span></div></td>
+                  <td><DateTime params={num.created} /></td>
+                  <td><DateTime params={num.updated} /></td>
                   <td>
-                    <WhatsAppSignup row={num} />
+                    <div className='flex justify-evenly'>
+                      <WhatsAppSignup row={num} />
+                      <WhatsAppSignupPrefilled row={num} />
+                    </div>
                   </td>
                 </tr>
               ))
